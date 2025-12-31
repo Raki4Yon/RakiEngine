@@ -1,0 +1,5 @@
+*.exe
+*.cache
+*.dll
+*.log
+*.pdb
