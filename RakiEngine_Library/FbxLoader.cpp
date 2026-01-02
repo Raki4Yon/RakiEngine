@@ -1,4 +1,4 @@
-﻿#include "FbxLoader.h"
+#include "FbxLoader.h"
 #include <iostream>
 #include <algorithm>
 
@@ -116,7 +116,7 @@ void FbxLoader::ParseNodeRecursive(fbxModel* model, FbxNode* fbxnode, Node* pare
         }
     }
 
-    std::cout << fbxnode->GetChildCount() << std::endl;
+    std::cout << "name:" << name << "   childcount:" << fbxnode->GetChildCount() << std::endl;
     //子ノードに対し再帰呼び出し
     for (int i = 0; i < fbxnode->GetChildCount(); i++) {
         ParseNodeRecursive(model, fbxnode->GetChild(i), &node);
@@ -354,83 +354,114 @@ void FbxLoader::ParseSkin(fbxModel* model, FbxMesh* fbxMesh)
 
         bone.invInitialBone = XMMatrixInverse(nullptr, initialPose);
 
+        
         struct WeightSet {
-            UINT index;
-            float weight;
+            UINT index;     //制御点
+            float weight;   //ウェイト
         };
 
         //二次元配列（vector：全制御点　list:頂点が影響を受けるボーンのリスト）
         std::vector<std::list<WeightSet>> weightLists(fbxMesh->GetControlPointsCount());
 
-        //i番ボーン
-        for (int i = 0; i < clusterCount; i++) {
-            FbxCluster* fbxCluster = skin->GetCluster(i);
-            //制御点インデックスとウェイト配列の総数
-            int controlPointIndicesCount = fbxCluster->GetControlPointIndicesCount();
+        int controlPointIndicesCount = fbxCluster->GetControlPointIndicesCount();
 
-            model->ctrlPointIndicesCount = controlPointIndicesCount;
+        model->ctrlPointIndicesCount = controlPointIndicesCount;
 
-            //制御点インデックス配列
-            int* controlPointIndices = fbxCluster->GetControlPointIndices();
-            //制御点のウェイト配列
-            double* controlPointWeights = fbxCluster->GetControlPointWeights();
+        //i番ボーンの制御点のインデックス配列
+        int* controlPointIndices = fbxCluster->GetControlPointIndices();
+        //i番ボーンの制御点のウェイト配列
+        double* controlPointWeights = fbxCluster->GetControlPointWeights();
 
-            //影響を受けるすべての制御点
-            for (int j = 0; j < controlPointIndicesCount; j++) {
-                //制御点j番のインデックスとウェイトを取得
-                int vertIndex = controlPointIndices[j];
-                float weight = (float)controlPointWeights[j];
+        //影響を受けるすべての制御点
+        for (int j = 0; j < controlPointIndicesCount; j++) {
+            //制御点j番のインデックスとウェイトを取得
+            int vertIndex = controlPointIndices[j];
+            float weight = (float)controlPointWeights[j];
 
-                //制御点j番にi番ボーン、ウェイトを格納
-                weightLists[vertIndex].emplace_back(WeightSet{ (UINT)i,weight });
+            //制御点j番にボーンi番のウェイトを格納
+            weightLists[vertIndex].emplace_back(WeightSet{ (UINT)i,weight });
+        }
+
+        auto& vertices = model->vertices;
+        
+        //デバッグ出力
+        //ボーン番号、ウェイト総数
+        std::cout << "bone name:"<< fbxCluster->GetLink()->GetName() << "   bone index:" << i << "   weight count:" << weightLists.size() << std::endl;
+        int index_count = 0;
+        for (auto& wls : weightLists)
+        {
+            if (wls.empty()) 
+            {
+                index_count++;
+                continue;
             }
+            for (auto& wl : wls)
+            {
+                std::cout << index_count << "," << wl.index << "," << wl.weight << "|";
+            }
+            std::cout << std::endl;
+            index_count++;
+        }
 
-            //影響を受けるすべての頂点について
-            //for (int v = 0; v < model->vertices.size(); v++) {
-            //    //v番目の頂点のインデックス番号を取得
-            //    int vIndexNum = model->vertices[v].controlPointIndex;
-            //    //制御点v番のインデックスとウェイトを取得
-            //    int vertIndex = controlPointIndices[vIndexNum];
-            //    float weight = (float)controlPointWeights[vIndexNum];
+        //全頂点について
+        for (int k = 0; k < vertices.size(); k++) {
+            //頂点k番の制御点のウェイトリストを取得
+            auto& weightList = weightLists[vertices[k].controlPointIndex];
 
-            //    //vertIndex番の頂点ウェイトリストに、ボーンインデックスiとウェイト値を格納
-            //    weightLists[vertIndex].emplace_back(WeightSet{ (UINT)i,weight });
-            //}
+            //書き込むウェイトがないやつはスキップ
+            if (weightList.empty()) continue;
 
-            auto& vertices = model->vertices;
+            //もっとも影響度の高いボーン4つに絞る
+            weightList.sort([](auto const& l, auto const& r) {
+                return l.weight > r.weight;
+                });
 
-            //全頂点について
-            for (int i = 0; i < vertices.size(); i++) {
-                //頂点i番の制御点インデックスのウェイトリストを取得
-                auto& weightList = weightLists[vertices[i].controlPointIndex];
+            int weightArrayIndex = 0;
 
-                //もっとも影響度の高いボーン4つに絞る
-                weightList.sort([](auto const& l, auto const& r) {
-                    return l.weight > r.weight;
-                    });
+            //ソート済のウェイトリストを
+            for (auto& weightSet : weightList) {
+                //頂点に書き込む
+                //このとき参照するインデックスは、先頭から4つまで
+                vertices[k].boneIndex[weightArrayIndex] = weightSet.index;
+                vertices[k].boneWeight[weightArrayIndex] = weightSet.weight;
 
-                int weightArrayIndex = 0;
+                //4つ以上のウェイトは持たない
+                if (++weightArrayIndex >= fbxModel::BONE_INDICES_MAX) {
+                    float weight = 0.0f;
 
-                //ソート済のウェイトリストを
-                for (auto& weightSet : weightList) {
-                    //頂点に書き込む
-                    //このとき参照するインデックスは
-                    vertices[i].boneIndex[weightArrayIndex] = weightSet.index;
-                    vertices[i].boneWeight[weightArrayIndex] = weightSet.weight;
-
-                    if (++weightArrayIndex >= fbxModel::BONE_INDICES_MAX) {
-                        float weight = 0.0f;
-
-                        for (int j = 1; j < fbxModel::BONE_INDICES_MAX; j++) {
-                            weight += vertices[i].boneWeight[j];
-                        }
-
-                        vertices[i].boneWeight[0] = 1.0f - weight;
-                        break;
+                    for (int j = 1; j < fbxModel::BONE_INDICES_MAX; j++) {
+                        weight += vertices[k].boneWeight[j];
                     }
+
+                    vertices[k].boneWeight[0] = 1.0f - weight;
+                    break;
                 }
             }
+
+            //頂点k番に、制御点controlPointIndex番のウェイトを保存
+            std::cout << "vertex:" << k << "   ctrlptr:" << vertices[k].controlPointIndex << std::endl;
         }
+
+        ////i番ボーン
+        //for (int i = 0; i < clusterCount; i++) {
+        //    FbxCluster* fbxCluster = skin->GetCluster(i);
+        //    //制御点インデックスとウェイト配列の総数
+
+
+        //    //影響を受けるすべての頂点について
+        //    //for (int v = 0; v < model->vertices.size(); v++) {
+        //    //    //v番目の頂点のインデックス番号を取得
+        //    //    int vIndexNum = model->vertices[v].controlPointIndex;
+        //    //    //制御点v番のインデックスとウェイトを取得
+        //    //    int vertIndex = controlPointIndices[vIndexNum];
+        //    //    float weight = (float)controlPointWeights[vIndexNum];
+
+        //    //    //vertIndex番の頂点ウェイトリストに、ボーンインデックスiとウェイト値を格納
+        //    //    weightLists[vertIndex].emplace_back(WeightSet{ (UINT)i,weight });
+        //    //}
+
+
+        //}
     }
 }
 
