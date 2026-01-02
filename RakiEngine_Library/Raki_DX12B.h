@@ -34,7 +34,7 @@ private: // エイリアス
 // Microsoft::WRL::を省略
 	template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-
+	static std::unique_ptr<Raki_DX12B> instance;
 
 public:
 	Raki_DX12B() = default;
@@ -45,10 +45,11 @@ public:
 	//Raki_DX12B &operator=(const Raki_DX12B &obj) = delete;
 	//Raki_DX12B(const Raki_DX12B &obj) = delete;
 
-	static Raki_DX12B *Get() {
-		static Raki_DX12B dx12b;
-		return &dx12b;
-	}
+	static void Create();
+
+	static void Set(Raki_DX12B* raki_dx12b);
+
+	static Raki_DX12B* Get();
 
 	/// <summary>
 	/// DirectX12の一括初期化

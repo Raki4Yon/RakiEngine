@@ -436,6 +436,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <Optimization>Full</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>
