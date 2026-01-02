@@ -16,6 +16,25 @@
 
 using namespace Microsoft::WRL;
 
+std::unique_ptr<Raki_DX12B> Raki_DX12B::instance;
+
+void Raki_DX12B::Create()
+{
+	instance = std::make_unique<Raki_DX12B>();
+}
+
+void Raki_DX12B::Set(Raki_DX12B* raki_dx12b)
+{
+	instance = std::make_unique<Raki_DX12B>();
+	instance.reset(raki_dx12b);
+}
+
+Raki_DX12B* Raki_DX12B::Get()
+{
+	if (!instance) nullptr;
+	return instance.get();
+}
+
 bool Raki_DX12B::InitDXGIDevice()
 {
     HRESULT result;
@@ -724,6 +743,11 @@ void Raki_DX12B::Destroy()
 
 void Raki_DX12B::Finalize()
 {
+	//Žè“®‰ð•ú
+	instance.reset();
+
+	if (!instance) return;
+
 #ifdef _DEBUG
 	ID3D12DebugDevice* debugDevice;
 	device.Get()->QueryInterface(&debugDevice);

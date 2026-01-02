@@ -1,6 +1,6 @@
-#include<iostream>
+#include <iostream>
 
-#include "Raki_DX12B.h"
+#include <Raki_DX12B.h>
 #include "FPS.h"
 #include "Audio.h"
 #include "TexManager.h"
@@ -33,8 +33,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	rakiWinApp = new Raki_WinAPI;
 	rakiWinApp->CreateGameWindow();
 
-	//エンジン側のエラー、警告を無視しない設定にするときは、この関数の第二引数にtrueを渡すと良い
-	Raki_DX12B::Get()->Initialize(rakiWinApp, false);
+	Raki_DX12B::Create();
+
+	Raki_DX12B* raki = new Raki_DX12B;
+	Raki_DX12B::Set(raki);
+	raki->Initialize(rakiWinApp, false);
 
 	GraphicManager graphicmgr;
 	graphicmgr.Init();
@@ -83,8 +86,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	Raki_DX12B::Get()->Finalize();
 	
+	raki->Finalize();
 	rakiWinApp->DeleteGameWindow();
 
+	delete raki;
+	raki = nullptr;
 	delete rakiWinApp;
 	rakiWinApp = nullptr;
 

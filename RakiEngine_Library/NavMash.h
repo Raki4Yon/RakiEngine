@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "RVector.h"
 
 #include <string>
@@ -16,24 +16,24 @@ public:
 
 	void InitCost();
 
-	//ƒiƒrƒƒbƒVƒ…’¸“_î•ñ
+	//ãƒŠãƒ“ãƒ¡ãƒƒã‚·ãƒ¥é ‚ç‚¹æƒ…å ±
 	std::array<RVector3, 3> navmashVertex;
-	//ƒiƒrƒƒbƒVƒ…dS“_
+	//ãƒŠãƒ“ãƒ¡ãƒƒã‚·ãƒ¥é‡å¿ƒç‚¹
 	RVector3				center;
-	//ƒCƒ“ƒfƒbƒNƒX”Ô†
+	//ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·
 	std::array<unsigned short, 3> indices;
 	std::string indexNumStr;
 
-	//—×ÚƒƒbƒVƒ…
+	//éš£æ¥ãƒ¡ãƒƒã‚·ãƒ¥
 	std::vector<NavMesh*>	navmeshptr;
 
-	//¯•Ê”Ô†
+	//è­˜åˆ¥ç•ªå·
 	int navMeshNo = -1;
 
-	//ƒqƒ…[ƒŠƒXƒeƒBƒbƒNƒRƒXƒgiƒG[ƒWƒFƒ“ƒg‚ªŒvZ‚·‚éj
+	//ãƒ’ãƒ¥ãƒ¼ãƒªã‚¹ãƒ†ã‚£ãƒƒã‚¯ã‚³ã‚¹ãƒˆï¼ˆã‚¨ãƒ¼ã‚¸ã‚§ãƒ³ãƒˆãŒè¨ˆç®—ã™ã‚‹ï¼‰
 	int heuristicCost = -1;
 
-	//ƒg[ƒ^ƒ‹ƒRƒXƒg
+	//ãƒˆãƒ¼ã‚¿ãƒ«ã‚³ã‚¹ãƒˆ
 	int totalCost = -1;
 
 	bool operator > (const NavMesh& str) const
