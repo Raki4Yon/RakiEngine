@@ -69,11 +69,15 @@ void DiferredRenderingMgr::Init(ID3D12Device* dev, ID3D12GraphicsCommandList* cm
     pointlight[7].light_power = lightPow;
     pointlight[7].light_pos = XMFLOAT3(-35.0f, 1.0f, -35.0f);
 
+    for (int i = 8; i < 256; i++)
+    {
+        pointlight[i].light_power = lightPow;
+        pointlight[i].light_pos = rutility::randomRV3(RVector3(-100, 0, -100), RVector3(100, 10, 100));
+    }
+
     lightPow = 500.0f;
     float lightAngle = 10.0f * (3.14f / 180.0f);
     float dir = 0.5f;
-
-    
 
     spotlight[0].light_power = lightPow;
     spotlight[0].light_pos = XMFLOAT3(120.0f, 100.0f, 120.0f);
@@ -98,20 +102,6 @@ void DiferredRenderingMgr::Init(ID3D12Device* dev, ID3D12GraphicsCommandList* cm
     spotlight[3].spDirection = { dir,-1,dir };
     spotlight[3].spAngle = lightAngle;
     spotlight[3].light_rgb = rutility::randomRV3(RVector3(0.5f, 0.5f, 0.5f), RVector3(1, 1, 1));
-    //spotlight[1].light_power = lightPow;
-    //spotlight[1].light_pos = XMFLOAT3(-70.0f, 10.0f, 0.0f);
-    //spotlight[2].light_power = lightPow;
-    //spotlight[2].light_pos = XMFLOAT3(0.0f, 10.0f, 70.0f);
-    //spotlight[3].light_power = lightPow;
-    //spotlight[3].light_pos = XMFLOAT3(0.0f, 10.0f, -70.0f);
-    //spotlight[4].light_power = lightPow;
-    //spotlight[4].light_pos = XMFLOAT3(35.0f, 10.0f, 35.0f);
-    //spotlight[5].light_power = lightPow;
-    //spotlight[5].light_pos = XMFLOAT3(-35.0f, 10.0f, 35.0f);
-    //spotlight[6].light_power = lightPow;
-    //spotlight[6].light_pos = XMFLOAT3(35.0f, 10.0f, -35.0f);
-    //spotlight[7].light_power = lightPow;
-    //spotlight[7].light_pos = XMFLOAT3(-35.0f, 10.0f, -35.0f);
 }
 
 void DiferredRenderingMgr::Rendering(RTex* gBuffer, RTex* shadowMap)
