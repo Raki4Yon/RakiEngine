@@ -440,7 +440,7 @@ Pipeline3D NY_Object3DManager::CreateDiferredRenderingPipelineState()
     blenddesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;//標準設定
 
     //ブレンドステートの共通設定
-    blenddesc.BlendEnable = true;//ブレンド有効
+    blenddesc.BlendEnable = false;//ブレンド有効
     blenddesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;//加算合成
     blenddesc.SrcBlendAlpha = D3D12_BLEND_ONE;//ソースの値を100%使用
     blenddesc.DestBlendAlpha = D3D12_BLEND_ZERO;//デストの値を0%使用
@@ -468,7 +468,7 @@ Pipeline3D NY_Object3DManager::CreateDiferredRenderingPipelineState()
     //レンダーターゲット設定
 
     //レンダーターゲットにするGBufferを作成
-    float clearcolors[4] = { 0.0f,0.0f,0.0f,0.0f };
+    float clearcolors[4] = { 0.0f,0.0f,0.0f,1.0f };
     //レンダーターゲット設定
     //上から
     //basecolor

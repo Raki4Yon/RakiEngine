@@ -7,11 +7,22 @@
 #include <array>
 
 #include "DirectionalLight.h"
+#include "PointLight.h"
 #include "RTex.h"
 
 //ライブラリコンパイル
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "d3dcompiler.lib")
+
+struct SpotLightData
+{
+	DirectX::XMFLOAT3 light_pos = { 0,10,0 };
+	float pad_1;
+	DirectX::XMFLOAT3 light_rgb = { 10.0f,10.0f,10.0f };
+	float light_power = 0.0f;
+	DirectX::XMFLOAT3 spDirection = { 0,-1,0 }; // 射出方向 
+	float spAngle = 30.0f; // 射出角度
+};
 
 struct cbuffer_b0
 {
@@ -28,6 +39,16 @@ struct cbuff_bool
 struct cbuffer_b1
 {
 	DirectionalLight::ConstBuffData lightData[4];
+};
+
+struct cbuffer_b2
+{
+	PointLightData lightData[256];
+};
+
+struct cbuffer_b3
+{
+	SpotLightData lightData[256];
 };
 
 class DiferredRenderingMgr
@@ -49,7 +70,7 @@ public:
 	//デバッグ描画
 	void ShowImGui();
 
-
+	PointLightData* GetPointLight(int index);
 
 private:
 	struct VertexPosUv {
@@ -78,9 +99,17 @@ private:
 	//定数バッファ（カメラ視点座標）
 	ComPtr<ID3D12Resource>		m_constBuffEyePos;
 	ComPtr<ID3D12Resource>		m_constBuffDirLight;
+	ComPtr<ID3D12Resource>		m_constBuffPointLight;
+	ComPtr<ID3D12Resource>		m_constBuffSpotLight;
 
 	//ライト配列
 	std::array<DirectionalLight, 4> directionalLights;
+
+	//ポイントライト
+	std::array<PointLightData, 256> pointlight;
+
+	//スポットライト
+	std::array<SpotLightData, 256> spotlight;
 
 };
 

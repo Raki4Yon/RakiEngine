@@ -2,8 +2,11 @@
 #include "NY_Camera.h"
 #include "RenderTargetManager.h"
 #include "DirectionalLight.h"
+#include "RakiUtility.h"
 
 #include "Raki_imguiMgr.h"
+
+#include <math.h>
 
 void DiferredRenderingMgr::Init(ID3D12Device* dev, ID3D12GraphicsCommandList* cmd)
 {
@@ -39,9 +42,76 @@ void DiferredRenderingMgr::Init(ID3D12Device* dev, ID3D12GraphicsCommandList* cm
     directionalLights[3].SetLightUseFlag(true);
     directionalLights[3].SetLightUseSpecular(false);
 
+    //pointlight.light_pos = DirectX::XMFLOAT3(0, 0, 0);
+
 	ShaderCompile();
 
 	CreateGraphicsPipeline();
+
+    float lightPow = 30.0f;
+
+    //ライト配置（本来はクライアントサイドでやるべき）
+    pointlight[0].light_power = lightPow;
+    pointlight[0].light_pos = XMFLOAT3(70.0f, 1.0f, 0.0f);
+    pointlight[1].light_power = lightPow;
+    pointlight[1].light_pos = XMFLOAT3(-70.0f, 1.0f, 0.0f);
+    pointlight[2].light_power = lightPow;
+    pointlight[2].light_pos = XMFLOAT3(0.0f, 1.0f, 70.0f);
+    pointlight[3].light_power = lightPow;
+    pointlight[3].light_pos = XMFLOAT3(0.0f, 1.0f, -70.0f);
+
+    pointlight[4].light_power = lightPow;
+    pointlight[4].light_pos = XMFLOAT3(35.0f, 1.0f, 35.0f);
+    pointlight[5].light_power = lightPow;
+    pointlight[5].light_pos = XMFLOAT3(-35.0f, 1.0f, 35.0f);
+    pointlight[6].light_power = lightPow;
+    pointlight[6].light_pos = XMFLOAT3(35.0f, 1.0f, -35.0f);
+    pointlight[7].light_power = lightPow;
+    pointlight[7].light_pos = XMFLOAT3(-35.0f, 1.0f, -35.0f);
+
+    lightPow = 500.0f;
+    float lightAngle = 10.0f * (3.14f / 180.0f);
+    float dir = 0.5f;
+
+    
+
+    spotlight[0].light_power = lightPow;
+    spotlight[0].light_pos = XMFLOAT3(120.0f, 100.0f, 120.0f);
+    spotlight[0].spDirection = { -dir,-1,-dir };
+    spotlight[0].spAngle = lightAngle;
+    spotlight[0].light_rgb = rutility::randomRV3(RVector3(0.5f, 0.5f, 0.5f), RVector3(1, 1, 1));
+
+    spotlight[1].light_power = lightPow;
+    spotlight[1].light_pos = XMFLOAT3(120.0f, 100.0f, -120.0f);
+    spotlight[1].spDirection = { -dir,-1,dir };
+    spotlight[1].spAngle = lightAngle;
+    spotlight[1].light_rgb = rutility::randomRV3(RVector3(0.5f, 0.5f, 0.5f), RVector3(1, 1, 1));
+
+    spotlight[2].light_power = lightPow;
+    spotlight[2].light_pos = XMFLOAT3(-120.0f, 100.0f, 120.0f);
+    spotlight[2].spDirection = { dir,-1,-dir };
+    spotlight[2].spAngle = lightAngle;
+    spotlight[2].light_rgb = rutility::randomRV3(RVector3(0.5f, 0.5f, 0.5f), RVector3(1, 1, 1));
+
+    spotlight[3].light_power = lightPow;
+    spotlight[3].light_pos = XMFLOAT3(-120.0f, 100.0f, -120.0f);
+    spotlight[3].spDirection = { dir,-1,dir };
+    spotlight[3].spAngle = lightAngle;
+    spotlight[3].light_rgb = rutility::randomRV3(RVector3(0.5f, 0.5f, 0.5f), RVector3(1, 1, 1));
+    //spotlight[1].light_power = lightPow;
+    //spotlight[1].light_pos = XMFLOAT3(-70.0f, 10.0f, 0.0f);
+    //spotlight[2].light_power = lightPow;
+    //spotlight[2].light_pos = XMFLOAT3(0.0f, 10.0f, 70.0f);
+    //spotlight[3].light_power = lightPow;
+    //spotlight[3].light_pos = XMFLOAT3(0.0f, 10.0f, -70.0f);
+    //spotlight[4].light_power = lightPow;
+    //spotlight[4].light_pos = XMFLOAT3(35.0f, 10.0f, 35.0f);
+    //spotlight[5].light_power = lightPow;
+    //spotlight[5].light_pos = XMFLOAT3(-35.0f, 10.0f, 35.0f);
+    //spotlight[6].light_power = lightPow;
+    //spotlight[6].light_pos = XMFLOAT3(35.0f, 10.0f, -35.0f);
+    //spotlight[7].light_power = lightPow;
+    //spotlight[7].light_pos = XMFLOAT3(-35.0f, 10.0f, -35.0f);
 }
 
 void DiferredRenderingMgr::Rendering(RTex* gBuffer, RTex* shadowMap)
@@ -62,25 +132,27 @@ void DiferredRenderingMgr::Rendering(RTex* gBuffer, RTex* shadowMap)
     //頂点バッファ設定
     m_cmd->IASetVertexBuffers(0, 1, &m_vbview);
     //SRVセット（計算するパラメータが増えると、ここも増える）
-    m_cmd->SetGraphicsRootDescriptorTable(2,
+    m_cmd->SetGraphicsRootDescriptorTable(0,
         CD3DX12_GPU_DESCRIPTOR_HANDLE(gBuffer->GetDescriptorHeapSRV()->GetGPUDescriptorHandleForHeapStart(), 
             0, 
             m_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)));
-    m_cmd->SetGraphicsRootDescriptorTable(3,
+    m_cmd->SetGraphicsRootDescriptorTable(1,
         CD3DX12_GPU_DESCRIPTOR_HANDLE(gBuffer->GetDescriptorHeapSRV()->GetGPUDescriptorHandleForHeapStart(),
             1,
             m_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)));
-    m_cmd->SetGraphicsRootDescriptorTable(4,
+    m_cmd->SetGraphicsRootDescriptorTable(2,
         CD3DX12_GPU_DESCRIPTOR_HANDLE(gBuffer->GetDescriptorHeapSRV()->GetGPUDescriptorHandleForHeapStart(),
             2,
             m_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)));
-    m_cmd->SetGraphicsRootDescriptorTable(5,
+    m_cmd->SetGraphicsRootDescriptorTable(3,
         CD3DX12_GPU_DESCRIPTOR_HANDLE(gBuffer->GetDescriptorHeapSRV()->GetGPUDescriptorHandleForHeapStart(),
             3,
             m_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)));
     //定数バッファ設定（パラメーターを増やすたびにここを確認せよ）
-    m_cmd->SetGraphicsRootConstantBufferView(0, m_constBuffEyePos->GetGPUVirtualAddress());
-    m_cmd->SetGraphicsRootConstantBufferView(1, m_constBuffDirLight->GetGPUVirtualAddress());
+    m_cmd->SetGraphicsRootConstantBufferView(4, m_constBuffEyePos->GetGPUVirtualAddress());
+    m_cmd->SetGraphicsRootConstantBufferView(5, m_constBuffDirLight->GetGPUVirtualAddress());
+    m_cmd->SetGraphicsRootConstantBufferView(6, m_constBuffPointLight->GetGPUVirtualAddress());
+    m_cmd->SetGraphicsRootConstantBufferView(7, m_constBuffSpotLight->GetGPUVirtualAddress());
 
     //ディファードレンダリング結果出力
     m_cmd->DrawInstanced(6, 1, 0, 0);
@@ -97,6 +169,11 @@ void DiferredRenderingMgr::ShowImGui()
 {
 
 
+}
+
+PointLightData* DiferredRenderingMgr::GetPointLight(int index)
+{
+    return &pointlight[index];
 }
 
 void DiferredRenderingMgr::ShaderCompile()
@@ -237,6 +314,56 @@ void DiferredRenderingMgr::CreateGraphicsPipeline()
         m_constBuffDirLight->Unmap(0, nullptr);
     }
 
+    cbuffResdDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(cbuffer_b2) + 0xff) & ~0xff);
+    m_dev->CreateCommittedResource(
+        &heapProp,
+        D3D12_HEAP_FLAG_NONE,
+        &cbuffResdDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&m_constBuffPointLight)
+    );
+
+    cbuffer_b2* ConstMapB2 = nullptr;
+    result = m_constBuffPointLight->Map(0, nullptr, (void**)&ConstMapB2);
+    if (SUCCEEDED(result))
+    {
+        for (int i = 0; i < pointlight.size(); i++)
+        {
+            ConstMapB2->lightData[i].light_pos = pointlight[i].light_pos;
+            ConstMapB2->lightData[i].light_rgb = pointlight[i].light_rgb;
+            ConstMapB2->lightData[i].light_power = pointlight[i].light_power;
+        }
+        m_constBuffPointLight->Unmap(0, nullptr);
+    }
+
+    cbuffResdDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(cbuffer_b3) + 0xff) & ~0xff);
+    m_dev->CreateCommittedResource(
+        &heapProp,
+        D3D12_HEAP_FLAG_NONE,
+        &cbuffResdDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&m_constBuffSpotLight)
+    );
+
+    cbuffer_b3* ConstMapB3 = nullptr;
+    result = m_constBuffSpotLight->Map(0, nullptr, (void**)&ConstMapB3);
+    if (SUCCEEDED(result))
+    {
+        for (int i = 0; i < spotlight.size(); i++)
+        {
+            ConstMapB3->lightData[i].light_pos = spotlight[i].light_pos;
+            ConstMapB3->lightData[i].light_rgb = spotlight[i].light_rgb;
+            ConstMapB3->lightData[i].light_power = spotlight[i].light_power;
+            ConstMapB3->lightData[i].spDirection = spotlight[i].spDirection;
+            ConstMapB3->lightData[i].spAngle = spotlight[i].spAngle;
+        }
+        m_constBuffSpotLight->Unmap(0, nullptr);
+    }
+
+
+
 #pragma endregion VERTEX_INIT
 
     //-----頂点レイアウト-----//
@@ -301,16 +428,17 @@ void DiferredRenderingMgr::CreateGraphicsPipeline()
 
 
     //ルートパラメーターの設定
-    CD3DX12_ROOT_PARAMETER rootparams[6] = {};
-    rootparams[0].InitAsConstantBufferView(0);//b0 スペキュラ用視点座標
-    rootparams[1].InitAsConstantBufferView(1);
+    CD3DX12_ROOT_PARAMETER rootparams[8] = {};
     //GBufferテクスチャ用（定数バッファをライト配列を入れるのに使う予定だが、現状はなし）
-    rootparams[2].InitAsDescriptorTable(1, &descRangeSRV_0, D3D12_SHADER_VISIBILITY_ALL);//アルベドテクスチャ
-    rootparams[3].InitAsDescriptorTable(1, &descRangeSRV_1, D3D12_SHADER_VISIBILITY_ALL);//法線テクスチャ
-    rootparams[4].InitAsDescriptorTable(1, &descRangeSRV_2, D3D12_SHADER_VISIBILITY_ALL);//ワールド座標テクスチャ
-    rootparams[5].InitAsDescriptorTable(1, &descRangeSRV_3, D3D12_SHADER_VISIBILITY_ALL);//深度情報テクスチャ
+    rootparams[0].InitAsDescriptorTable(1, &descRangeSRV_0, D3D12_SHADER_VISIBILITY_ALL);//アルベドテクスチャ
+    rootparams[1].InitAsDescriptorTable(1, &descRangeSRV_1, D3D12_SHADER_VISIBILITY_ALL);//法線テクスチャ
+    rootparams[2].InitAsDescriptorTable(1, &descRangeSRV_2, D3D12_SHADER_VISIBILITY_ALL);//ワールド座標テクスチャ
+    rootparams[3].InitAsDescriptorTable(1, &descRangeSRV_3, D3D12_SHADER_VISIBILITY_ALL);//深度情報テクスチャ
     //定数バッファ
-
+    rootparams[4].InitAsConstantBufferView(0);//b0 スペキュラ用視点座標
+    rootparams[5].InitAsConstantBufferView(1);
+    rootparams[6].InitAsConstantBufferView(2);
+    rootparams[7].InitAsConstantBufferView(3);
 
     //テクスチャサンプラー設定
     D3D12_STATIC_SAMPLER_DESC samplerDesc   = {};
@@ -367,5 +495,33 @@ void DiferredRenderingMgr::UpdateConstBuff()
             else { ConstMapB1->lightData[i].useSpecular = 0; }
         }
         m_constBuffDirLight->Unmap(0, nullptr);
+    }
+
+    cbuffer_b2* ConstMapB2 = nullptr;
+    result = m_constBuffPointLight->Map(0, nullptr, (void**)&ConstMapB2);
+    if (SUCCEEDED(result))
+    {
+        for (int i = 0; i < pointlight.size(); i++)
+        {
+            ConstMapB2->lightData[i].light_pos = pointlight[i].light_pos;
+            ConstMapB2->lightData[i].light_rgb = pointlight[i].light_rgb;
+            ConstMapB2->lightData[i].light_power = pointlight[i].light_power;
+        }
+        m_constBuffPointLight->Unmap(0, nullptr);
+    }
+
+    cbuffer_b3* ConstMapB3 = nullptr;
+    result = m_constBuffSpotLight->Map(0, nullptr, (void**)&ConstMapB3);
+    if (SUCCEEDED(result))
+    {
+        for (int i = 0; i < spotlight.size(); i++)
+        {
+            ConstMapB3->lightData[i].light_pos = spotlight[i].light_pos;
+            ConstMapB3->lightData[i].light_rgb = spotlight[i].light_rgb;
+            ConstMapB3->lightData[i].light_power = spotlight[i].light_power;
+            ConstMapB3->lightData[i].spDirection = spotlight[i].spDirection;
+            ConstMapB3->lightData[i].spAngle = spotlight[i].spAngle;
+        }
+        m_constBuffSpotLight->Unmap(0, nullptr);
     }
 }

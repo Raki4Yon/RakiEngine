@@ -12,6 +12,8 @@
 #include "SpriteManager.h"
 #include "Raki_imguiMgr.h"
 #include <NY_Camera.h>
+#include "fbxModel.h"
+#include "FbxLoader.h"
 
 
 using namespace DirectX;
@@ -44,20 +46,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	
 	Audio::Init();
 
-	RVector3 eye(0.f, 100.f, -100.f);
+	RVector3 eye(0.f, 200.f, -200.f);
 	RVector3 target(0.f, 0.f, 0.f);
 	RVector3 up(0.f, 1.f, 0.f);
 	NY_Camera::Get()->SetViewStatusEyeTargetUp(eye, target, up);
 
-	UINT plane_tex = TexManager::LoadTexture("Resources/white8x8.png");
+	UINT whiteA_tex = TexManager::LoadTexture("Resources/white8x8.png");
+	UINT plane_tex = TexManager::LoadTexture("Resources/grid8x8.png");
 
 	std::shared_ptr<Model3D> plane;
 	plane = std::make_shared<Model3D>();
-	plane->CreatePlaneModelXZ(100, 100, 1, 1, plane_tex, nullptr);
+	plane->CreatePlaneModelXZ(160, 160, 16, 16, plane_tex, nullptr);
 
 	std::unique_ptr<Object3d> plane_object = std::make_unique<Object3d>();
 	plane_object->InitObject3D(raki->GetDevice());
 	plane_object->SetLoadedModelData(plane);
+
+	//std::shared_ptr<fbxModel> capo_model = std::make_shared<fbxModel>();
+	//capo_model.reset(FbxLoader::GetInstance()->LoadFBXFile("Capoeira"));
+	//std::shared_ptr<Object3d> cap_object = make_shared<Object3d>();
+	//cap_object->InitObject3D(raki->GetDevice());
+
+	//ポイントライトを並べる
+	
+
 
 #pragma endregion GameValue
 
@@ -68,6 +80,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		if (rakiWinApp->ProcessMessage()) { break; }
 
 		Input::StartGetInputState();
+
+		
 
 
 		graphicmgr.StartDraw();
@@ -94,8 +108,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	}
 	
 	myImgui::FinalizeImGui();
-
-	Raki_DX12B::Get()->Finalize();
 	
 	raki->Finalize();
 	rakiWinApp->DeleteGameWindow();

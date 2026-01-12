@@ -744,9 +744,6 @@ void Raki_DX12B::Destroy()
 void Raki_DX12B::Finalize()
 {
 	//Žè“®‰ð•ú
-	instance.reset();
-
-	if (!instance) return;
 
 #ifdef _DEBUG
 	ID3D12DebugDevice* debugDevice;

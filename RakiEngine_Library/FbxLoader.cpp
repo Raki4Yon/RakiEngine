@@ -4,7 +4,7 @@
 
 const std::string FbxLoader::baseDir = "Resources/";
 
-const std::string FbxLoader::defaultTexName = "white1x1.png";
+const std::string FbxLoader::defaultTexName = "white8x8.png";
 
 using namespace DirectX;
 
@@ -117,7 +117,7 @@ void FbxLoader::ParseNodeRecursive(fbxModel* model, FbxNode* fbxnode, Node* pare
     }
 
     std::cout << "name:" << name << "   childcount:" << fbxnode->GetChildCount() << std::endl;
-    //å­ãƒãƒ¼ãƒ‰ã«å¯¾ã—å†å¸°å‘¼ã³å‡ºã—
+    //qƒm[ƒh‚É‘Î‚µÄ‹AŒÄ‚Ño‚µ
     for (int i = 0; i < fbxnode->GetChildCount(); i++) {
         ParseNodeRecursive(model, fbxnode->GetChild(i), &node);
     }
@@ -188,7 +188,7 @@ void FbxLoader::ParseMeshFaces(fbxModel* model, FbxMesh* mesh)
     FbxStringList uvNames;
     mesh->GetUVSetNames(uvNames);
 
-    //ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ãƒã‚¤ãƒ³ãƒˆæ ¼ç´é…åˆ—
+    //ƒRƒ“ƒgƒ[ƒ‹ƒ|ƒCƒ“ƒgŠi”[”z—ñ
     FbxVector4* pCoord = mesh->GetControlPoints();
     fbxVertex v{};
 
@@ -200,11 +200,11 @@ void FbxLoader::ParseMeshFaces(fbxModel* model, FbxMesh* mesh)
         }
 
         for (int j = 0; j < polygonSize; j++) {
-            //åˆ¶å¾¡ç‚¹ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’å–å¾—
+            //§Œä“_‚ÌƒCƒ“ƒfƒbƒNƒX‚ğæ“¾
             int index = mesh->GetPolygonVertex(i, j);
             assert(index >= 0);
 
-            //åˆ¶å¾¡ç‚¹é…åˆ—ã®indexç•ªç›®ã‚’å‚ç…§
+            //§Œä“_”z—ñ‚Ìindex”Ô–Ú‚ğQÆ
             v.pos.x = (float)(*(pCoord + index))[0];
             v.pos.y = (float)(*(pCoord + index))[1];
             v.pos.z = (float)(*(pCoord + index))[2];
@@ -228,7 +228,7 @@ void FbxLoader::ParseMeshFaces(fbxModel* model, FbxMesh* mesh)
                 }
             }
 
-            //åˆ¶å¾¡ç‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·ã‚’æ ¼ç´
+            //§Œä“_ƒCƒ“ƒfƒbƒNƒX”Ô†‚ğŠi”[
             v.controlPointIndex = index;
 
             //if (j < 3) {
@@ -243,7 +243,7 @@ void FbxLoader::ParseMeshFaces(fbxModel* model, FbxMesh* mesh)
             //    indices.push_back(index0);
             //}
 
-            //é ‚ç‚¹ã¨ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’å‹•çš„ã«å¢—ã‚„ã™
+            //’¸“_‚ÆƒCƒ“ƒfƒbƒNƒX‚ğ“®“I‚É‘‚â‚·
             indices.push_back(unsigned short(vertices.size()));
             vertices.push_back(v);
         }
@@ -333,11 +333,11 @@ void FbxLoader::ParseSkin(fbxModel* model, FbxMesh* fbxMesh)
     int clusterCount = skin->GetClusterCount();
     bones.reserve(clusterCount);
 
-    //ã™ã¹ã¦ã®ãƒœãƒ¼ãƒ³
+    //‚·‚×‚Ä‚Ìƒ{[ƒ“
     for (int i = 0; i < clusterCount; i++) {
-        //iæœ¬ç›®ã®ãƒœãƒ¼ãƒ³
+        //i–{–Ú‚Ìƒ{[ƒ“
         FbxCluster* fbxCluster = skin->GetCluster(i);
-        //ãƒœãƒ¼ãƒ³ã®ãƒãƒ¼ãƒ‰ã®åå‰
+        //ƒ{[ƒ“‚Ìƒm[ƒh‚Ì–¼‘O
         const char* boneName = fbxCluster->GetLink()->GetName();
 
         bones.emplace_back(Bone(boneName));
@@ -356,36 +356,36 @@ void FbxLoader::ParseSkin(fbxModel* model, FbxMesh* fbxMesh)
 
         
         struct WeightSet {
-            UINT index;     //åˆ¶å¾¡ç‚¹
-            float weight;   //ã‚¦ã‚§ã‚¤ãƒˆ
+            UINT index;     //§Œä“_
+            float weight;   //ƒEƒFƒCƒg
         };
 
-        //äºŒæ¬¡å…ƒé…åˆ—ï¼ˆvectorï¼šå…¨åˆ¶å¾¡ç‚¹ã€€list:é ‚ç‚¹ãŒå½±éŸ¿ã‚’å—ã‘ã‚‹ãƒœãƒ¼ãƒ³ã®ãƒªã‚¹ãƒˆï¼‰
+        //“ñŸŒ³”z—ñivectorF‘S§Œä“_@list:’¸“_‚ª‰e‹¿‚ğó‚¯‚éƒ{[ƒ“‚ÌƒŠƒXƒgj
         std::vector<std::list<WeightSet>> weightLists(fbxMesh->GetControlPointsCount());
 
         int controlPointIndicesCount = fbxCluster->GetControlPointIndicesCount();
 
         model->ctrlPointIndicesCount = controlPointIndicesCount;
 
-        //iç•ªãƒœãƒ¼ãƒ³ã®åˆ¶å¾¡ç‚¹ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹é…åˆ—
+        //i”Ôƒ{[ƒ“‚Ì§Œä“_‚ÌƒCƒ“ƒfƒbƒNƒX”z—ñ
         int* controlPointIndices = fbxCluster->GetControlPointIndices();
-        //iç•ªãƒœãƒ¼ãƒ³ã®åˆ¶å¾¡ç‚¹ã®ã‚¦ã‚§ã‚¤ãƒˆé…åˆ—
+        //i”Ôƒ{[ƒ“‚Ì§Œä“_‚ÌƒEƒFƒCƒg”z—ñ
         double* controlPointWeights = fbxCluster->GetControlPointWeights();
 
-        //å½±éŸ¿ã‚’å—ã‘ã‚‹ã™ã¹ã¦ã®åˆ¶å¾¡ç‚¹
+        //‰e‹¿‚ğó‚¯‚é‚·‚×‚Ä‚Ì§Œä“_
         for (int j = 0; j < controlPointIndicesCount; j++) {
-            //åˆ¶å¾¡ç‚¹jç•ªã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã¨ã‚¦ã‚§ã‚¤ãƒˆã‚’å–å¾—
+            //§Œä“_j”Ô‚ÌƒCƒ“ƒfƒbƒNƒX‚ÆƒEƒFƒCƒg‚ğæ“¾
             int vertIndex = controlPointIndices[j];
             float weight = (float)controlPointWeights[j];
 
-            //åˆ¶å¾¡ç‚¹jç•ªã«ãƒœãƒ¼ãƒ³iç•ªã®ã‚¦ã‚§ã‚¤ãƒˆã‚’æ ¼ç´
+            //§Œä“_j”Ô‚Éƒ{[ƒ“i”Ô‚ÌƒEƒFƒCƒg‚ğŠi”[
             weightLists[vertIndex].emplace_back(WeightSet{ (UINT)i,weight });
         }
 
         auto& vertices = model->vertices;
         
-        //ãƒ‡ãƒãƒƒã‚°å‡ºåŠ›
-        //ãƒœãƒ¼ãƒ³ç•ªå·ã€ã‚¦ã‚§ã‚¤ãƒˆç·æ•°
+        //ƒfƒoƒbƒOo—Í
+        //ƒ{[ƒ“”Ô†AƒEƒFƒCƒg‘”
         std::cout << "bone name:"<< fbxCluster->GetLink()->GetName() << "   bone index:" << i << "   weight count:" << weightLists.size() << std::endl;
         int index_count = 0;
         for (auto& wls : weightLists)
@@ -403,29 +403,29 @@ void FbxLoader::ParseSkin(fbxModel* model, FbxMesh* fbxMesh)
             index_count++;
         }
 
-        //å…¨é ‚ç‚¹ã«ã¤ã„ã¦
+        //‘S’¸“_‚É‚Â‚¢‚Ä
         for (int k = 0; k < vertices.size(); k++) {
-            //é ‚ç‚¹kç•ªã®åˆ¶å¾¡ç‚¹ã®ã‚¦ã‚§ã‚¤ãƒˆãƒªã‚¹ãƒˆã‚’å–å¾—
+            //’¸“_k”Ô‚Ì§Œä“_‚ÌƒEƒFƒCƒgƒŠƒXƒg‚ğæ“¾
             auto& weightList = weightLists[vertices[k].controlPointIndex];
 
-            //æ›¸ãè¾¼ã‚€ã‚¦ã‚§ã‚¤ãƒˆãŒãªã„ã‚„ã¤ã¯ã‚¹ã‚­ãƒƒãƒ—
+            //‘‚«‚ŞƒEƒFƒCƒg‚ª‚È‚¢‚â‚Â‚ÍƒXƒLƒbƒv
             if (weightList.empty()) continue;
 
-            //ã‚‚ã£ã¨ã‚‚å½±éŸ¿åº¦ã®é«˜ã„ãƒœãƒ¼ãƒ³4ã¤ã«çµã‚‹
+            //‚à‚Á‚Æ‚à‰e‹¿“x‚Ì‚‚¢ƒ{[ƒ“4‚Â‚Éi‚é
             weightList.sort([](auto const& l, auto const& r) {
                 return l.weight > r.weight;
                 });
 
             int weightArrayIndex = 0;
 
-            //ã‚½ãƒ¼ãƒˆæ¸ˆã®ã‚¦ã‚§ã‚¤ãƒˆãƒªã‚¹ãƒˆã‚’
+            //ƒ\[ƒgÏ‚ÌƒEƒFƒCƒgƒŠƒXƒg‚ğ
             for (auto& weightSet : weightList) {
-                //é ‚ç‚¹ã«æ›¸ãè¾¼ã‚€
-                //ã“ã®ã¨ãå‚ç…§ã™ã‚‹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã¯ã€å…ˆé ­ã‹ã‚‰4ã¤ã¾ã§
+                //’¸“_‚É‘‚«‚Ş
+                //‚±‚Ì‚Æ‚«QÆ‚·‚éƒCƒ“ƒfƒbƒNƒX‚ÍAæ“ª‚©‚ç4‚Â‚Ü‚Å
                 vertices[k].boneIndex[weightArrayIndex] = weightSet.index;
                 vertices[k].boneWeight[weightArrayIndex] = weightSet.weight;
 
-                //4ã¤ä»¥ä¸Šã®ã‚¦ã‚§ã‚¤ãƒˆã¯æŒãŸãªã„
+                //4‚ÂˆÈã‚ÌƒEƒFƒCƒg‚Í‚½‚È‚¢
                 if (++weightArrayIndex >= fbxModel::BONE_INDICES_MAX) {
                     float weight = 0.0f;
 
@@ -438,25 +438,25 @@ void FbxLoader::ParseSkin(fbxModel* model, FbxMesh* fbxMesh)
                 }
             }
 
-            //é ‚ç‚¹kç•ªã«ã€åˆ¶å¾¡ç‚¹controlPointIndexç•ªã®ã‚¦ã‚§ã‚¤ãƒˆã‚’ä¿å­˜
+            //’¸“_k”Ô‚ÉA§Œä“_controlPointIndex”Ô‚ÌƒEƒFƒCƒg‚ğ•Û‘¶
             std::cout << "vertex:" << k << "   ctrlptr:" << vertices[k].controlPointIndex << std::endl;
         }
 
-        ////iç•ªãƒœãƒ¼ãƒ³
+        ////i”Ôƒ{[ƒ“
         //for (int i = 0; i < clusterCount; i++) {
         //    FbxCluster* fbxCluster = skin->GetCluster(i);
-        //    //åˆ¶å¾¡ç‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã¨ã‚¦ã‚§ã‚¤ãƒˆé…åˆ—ã®ç·æ•°
+        //    //§Œä“_ƒCƒ“ƒfƒbƒNƒX‚ÆƒEƒFƒCƒg”z—ñ‚Ì‘”
 
 
-        //    //å½±éŸ¿ã‚’å—ã‘ã‚‹ã™ã¹ã¦ã®é ‚ç‚¹ã«ã¤ã„ã¦
+        //    //‰e‹¿‚ğó‚¯‚é‚·‚×‚Ä‚Ì’¸“_‚É‚Â‚¢‚Ä
         //    //for (int v = 0; v < model->vertices.size(); v++) {
-        //    //    //vç•ªç›®ã®é ‚ç‚¹ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ç•ªå·ã‚’å–å¾—
+        //    //    //v”Ô–Ú‚Ì’¸“_‚ÌƒCƒ“ƒfƒbƒNƒX”Ô†‚ğæ“¾
         //    //    int vIndexNum = model->vertices[v].controlPointIndex;
-        //    //    //åˆ¶å¾¡ç‚¹vç•ªã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã¨ã‚¦ã‚§ã‚¤ãƒˆã‚’å–å¾—
+        //    //    //§Œä“_v”Ô‚ÌƒCƒ“ƒfƒbƒNƒX‚ÆƒEƒFƒCƒg‚ğæ“¾
         //    //    int vertIndex = controlPointIndices[vIndexNum];
         //    //    float weight = (float)controlPointWeights[vIndexNum];
 
-        //    //    //vertIndexç•ªã®é ‚ç‚¹ã‚¦ã‚§ã‚¤ãƒˆãƒªã‚¹ãƒˆã«ã€ãƒœãƒ¼ãƒ³ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹iã¨ã‚¦ã‚§ã‚¤ãƒˆå€¤ã‚’æ ¼ç´
+        //    //    //vertIndex”Ô‚Ì’¸“_ƒEƒFƒCƒgƒŠƒXƒg‚ÉAƒ{[ƒ“ƒCƒ“ƒfƒbƒNƒXi‚ÆƒEƒFƒCƒg’l‚ğŠi”[
         //    //    weightLists[vertIndex].emplace_back(WeightSet{ (UINT)i,weight });
         //    //}
 
@@ -467,20 +467,20 @@ void FbxLoader::ParseSkin(fbxModel* model, FbxMesh* fbxMesh)
 
 void FbxLoader::SaveAnimationData(fbxModel* model, FbxMesh* fbxMesh)
 {
-    ////ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ç·æ•°åˆ†ãƒ«ãƒ¼ãƒ—
+    ////ƒAƒjƒ[ƒVƒ‡ƒ“‘”•ªƒ‹[ƒv
     //int animationDataCount = fbxImporter->GetAnimStackCount();
 
     //for (int i = 0; i < animationDataCount; i++) {
-    //    //ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³æƒ…å ±ã‚’å–å¾—ã™ã‚‹
+    //    //ƒAƒjƒ[ƒVƒ‡ƒ“î•ñ‚ğæ“¾‚·‚é
     //    FbxTakeInfo* takeInfo = fbxImporter->GetTakeInfo(i);
 
-    //    //åŸºæº–ç‚¹ã‹ã‚‰ã®å·®ã‚’å–å¾—
+    //    //Šî€“_‚©‚ç‚Ì·‚ğæ“¾
     //    auto importOffset = takeInfo->mImportOffset;
     //    auto startTime = takeInfo->mLocalTimeSpan.GetStart();
     //    auto stopTime = takeInfo->mLocalTimeSpan.GetStop();	
 
-    //    float start = (importOffset.Get() + startTime.Get()) / FbxTime::GetOneFrameValue(FbxTime::eFrames60);	//60ãƒ•ãƒ¬ãƒ¼ãƒ ã§ã®é–‹å§‹æ™‚é–“ã‚’è¨­å®š
-    //    float end = (importOffset.Get() + stopTime.Get()) / FbxTime::GetOneFrameValue(FbxTime::eFrames60);	//60ãƒ•ãƒ¬ãƒ¼ãƒ ã§ã®çµ‚äº†æ™‚é–“ã‚’è¨­å®š
+    //    float start = (importOffset.Get() + startTime.Get()) / FbxTime::GetOneFrameValue(FbxTime::eFrames60);	//60ƒtƒŒ[ƒ€‚Å‚ÌŠJnŠÔ‚ğİ’è
+    //    float end = (importOffset.Get() + stopTime.Get()) / FbxTime::GetOneFrameValue(FbxTime::eFrames60);	//60ƒtƒŒ[ƒ€‚Å‚ÌI—¹ŠÔ‚ğİ’è
 
     //    SkinAnimationPlayInfo info{};
     //    info.start = start;

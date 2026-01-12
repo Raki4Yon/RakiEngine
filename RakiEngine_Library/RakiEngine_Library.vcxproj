@@ -74,6 +74,7 @@
     <ClCompile Include="NY_random.cpp" />
     <ClCompile Include="ParticleManager.cpp" />
     <ClCompile Include="ParticleManager2D.cpp" />
+    <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="Quaternion.cpp" />
     <ClCompile Include="RakiUtility.cpp" />
     <ClCompile Include="Raki_DX12B.cpp" />
@@ -136,6 +137,7 @@
     <ClInclude Include="NY_random.h" />
     <ClInclude Include="ParticleManager.h" />
     <ClInclude Include="ParticleManager2D.h" />
+    <ClInclude Include="PointLight.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="RakiUtility.h" />
     <ClInclude Include="Raki_DX12B.h" />
