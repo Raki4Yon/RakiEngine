@@ -258,6 +258,9 @@
     <ClCompile Include="RakiUtility.cpp">
       <Filter>utility</Filter>
     </ClCompile>
+    <ClCompile Include="PointLight.cpp">
+      <Filter>Graphic\3D\lights</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raki_imguiMgr.h">
@@ -445,6 +448,9 @@
     </ClInclude>
     <ClInclude Include="lib\fbx_sdk\include\fbxsdk.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="PointLight.h">
+      <Filter>Graphic\3D\lights</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,10 @@
 #include "DirectionalLight.h"
 #include "RenderTargetManager.h"
 
+# include <iostream>
+# include <cctype>
+# include <algorithm>
+
 //----- NY_Object3D -----//
 
 void Object3d::InitObject3D(ID3D12Device *dev)
@@ -586,7 +590,6 @@ void Object3d::DisplayObjectStatus(bool isDisplay)
 	ImguiMgr::Get()->StartDrawImgui("objectStatus", 200, 500);
 
 	ImGui::Checkbox("affine param", &isDisplayAffineParam);
-
 	if (isDisplayAffineParam) {
 		ImGui::Text("pos x:%.2f y:%.2f z:%.2f", position.x, position.y, position.z);
 		ImGui::SliderFloat("pos x", &position.x, -10000.0f, 10000.0f);
@@ -594,17 +597,118 @@ void Object3d::DisplayObjectStatus(bool isDisplay)
 		ImGui::SliderFloat("pos z", &position.z, -10000.0f, 10000.0f);
 
 		ImGui::Text("rot x:%.2f y:%.2f z:%.2f", rotation.x, rotation.y, rotation.z);
-		ImGui::SliderFloat("rot x", &rotation.x, -10000.0f, 10000.0f);
-		ImGui::SliderFloat("rot y", &rotation.y, -10000.0f, 10000.0f);
-		ImGui::SliderFloat("rot z", &rotation.z, -10000.0f, 10000.0f);
+		ImGui::SliderFloat("rot x", &rotation.x, 0, 360);
+		ImGui::SliderFloat("rot y", &rotation.y, 0, 360);
+		ImGui::SliderFloat("rot z", &rotation.z, 0, 360);
 
 		ImGui::Text("scale x:%.2f y:%.2f z:%.2f", scale.x, scale.y, scale.z);
-		ImGui::SliderFloat("scale x", &scale.x, -10000.0f, 10000.0f);
-		ImGui::SliderFloat("scale y", &scale.y, -10000.0f, 10000.0f);
-		ImGui::SliderFloat("scale z", &scale.z, -10000.0f, 10000.0f);
+		ImGui::SliderFloat("scale x", &scale.x, 0.1f, 100.0f);
+		ImGui::SliderFloat("scale y", &scale.y, 0.1f, 100.0f);
+		ImGui::SliderFloat("scale z", &scale.z, 0.1f, 100.0f);
 	}
 
+    //アニメーション
+    static bool isDisplayAnimInfo = true;
+    ImGui::Checkbox("anim", &isDisplayAnimInfo);
+    if (isDisplayAnimInfo)
+    {
+        //アニメーション番号指定
+        static char text1[8] = "";
+        ImGui::InputText("textbox 1", text1, sizeof(text1));
+        //文字列を数値に
+        auto toi = std::string(text1);
+        int anim_index = 0;
+        if (std::all_of(toi.cbegin(), toi.cend(), isdigit) && !toi.empty())
+        {
+            anim_index = std::stoi(toi);
+        }
+        else toi = "";
+        //アニメーション名
+        FbxAnimStack* animStack = nullptr;
+        if (fbxmodel->GetFbxScene()->GetSrcObject<FbxAnimStack>(anim_index) != nullptr) {
+            animStack = fbxmodel->GetFbxScene()->GetSrcObject<FbxAnimStack>(anim_index);
+        }
+        else {
+            animStack = fbxmodel->GetFbxScene()->GetSrcObject<FbxAnimStack>(0);
+            playAnimNum = 0;
+        }
+        if (animStack) ImGui::Text(animStack->GetName());
+
+        if (ImGui::Button("Play Single"))
+        {
+            currentTime = startTime;
+            PlayAnimation(ANIMATION_PLAYMODE::ANIM_MODE_FIRST, anim_index);
+        }
+        if (ImGui::Button("Play Loop")) 
+        { 
+            currentTime = startTime;
+            PlayAnimation(ANIMATION_PLAYMODE::ANIM_MODE_ROOP, anim_index); 
+        }
+        if (ImGui::Button("Pause")) 
+        { 
+            PauseAnimation(); 
+        }
+        if (ImGui::Button("Stop")) 
+        { 
+            StopAnimation(); 
+        }
+        //アニメーションのスライダー制御
+        static bool isAnimSliderControl = false;
+        ImGui::Checkbox("Anim slider control", &isAnimSliderControl);
+        if (isAnimSliderControl)
+        {
+            auto tl = currentTime.GetFrameCount(FbxTime::EMode::eFrames60);
+            auto ti = static_cast<int>(tl);
+            ImGui::SliderInt("anim frame",
+                &ti,
+                static_cast<int>(startTime.GetFrameCount(FbxTime::EMode::eFrames60)),
+                static_cast<int>(endTime.GetFrameCount(FbxTime::EMode::eFrames60)));
+            currentTime.SetFrame(static_cast<FbxLongLong>(ti), FbxTime::EMode::eFrames60);
+        }
+    }
+
 	ImGui::Checkbox("bone", &isDisplayBone);
+    if (isDisplayBone)
+    {
+
+        ImGui::BeginChild(ImGui::GetID((void*)0), ImVec2(300, 500), ImGuiWindowFlags_NoTitleBar);
+        //すべてのボーンの行列を表示（ボーンの番号も）
+        int b_count = 0;
+        for (auto& b : fbxmodel->GetBones())
+        {
+            ImGui::Text("bone index num:%d", b_count);
+            ImGui::Text(b.name.c_str());
+            XMMATRIX matcurrentPose;
+            FbxAMatrix fbxCurrentPose = b.fbxCluster->GetLink()->EvaluateGlobalTransform(currentTime);
+            FbxLoader::GetInstance()->ConvertMatrixFromFbx(&matcurrentPose, fbxCurrentPose);
+            ImGui::Text("%.3f,%.3f,%.3f,%.3f",
+                matcurrentPose.r[0].m128_f32[0],
+                matcurrentPose.r[0].m128_f32[1],
+                matcurrentPose.r[0].m128_f32[2],
+                matcurrentPose.r[0].m128_f32[3]);
+            ImGui::Text("%.3f,%.3f,%.3f,%.3f",
+                matcurrentPose.r[1].m128_f32[0],
+                matcurrentPose.r[1].m128_f32[1],
+                matcurrentPose.r[1].m128_f32[2],
+                matcurrentPose.r[1].m128_f32[3]);
+            ImGui::Text("%.3f,%.3f,%.3f,%.3f",
+                matcurrentPose.r[2].m128_f32[0],
+                matcurrentPose.r[2].m128_f32[1],
+                matcurrentPose.r[2].m128_f32[2],
+                matcurrentPose.r[2].m128_f32[3]);
+            ImGui::Text("%.3f,%.3f,%.3f,%.3f",
+                matcurrentPose.r[3].m128_f32[0],
+                matcurrentPose.r[3].m128_f32[1],
+                matcurrentPose.r[3].m128_f32[2],
+                matcurrentPose.r[3].m128_f32[3]);
+            ImGui::Text("-----------------------------------------------");
+            b_count++;
+        }
+        ImGui::EndChild();
+
+
+    }
+
 
 	ImguiMgr::Get()->EndDrawImgui();
 
